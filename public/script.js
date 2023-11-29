@@ -34,10 +34,29 @@ const createEl = (tag, attrs, children) => {
   return el;
 };
 
-// 뷰 정의
+// 컴포넌트 정의
+const Link = (attrs, children) => {
+  return createEl(
+    "a",
+    {
+      onClick: (event) => {
+        event.preventDefault();
+        const href = event.target.href;
+
+        window.history.pushState({}, "", new URL(href));
+
+        // 전체 화면 재랜더링
+        render();
+      },
+      ...attrs,
+    },
+    children
+  );
+};
+
 let count = 0;
 
-const renderCounterPage = () => {
+const CounterPage = () => {
   const increaseCount = () => {
     count++;
 
@@ -67,14 +86,14 @@ const renderCounterPage = () => {
   ]);
 };
 
-const renderAboutPage = () => {
+const AboutPage = () => {
   return createEl("div", { class: "about card" }, [
     createEl("h1", { class: "aboutTitle" }, "About"),
     createEl("p", { class: "aboutContent" }, "This is simple ui library"),
   ]);
 };
 
-const renderApp = () => {
+const App = () => {
   const currentPath = window.location.pathname;
 
   return createEl(
@@ -83,20 +102,10 @@ const renderApp = () => {
     [
       createEl("nav", { class: "navBar" }, [
         ...Object.entries(routeMap).map(([path, { title }]) => {
-          return createEl(
-            "a",
+          return Link(
             {
               class: path === currentPath ? "active" : null,
               href: path,
-              onClick: (event) => {
-                event.preventDefault();
-                const href = event.target.href;
-
-                window.history.pushState({}, "", new URL(href));
-
-                // 전체 화면 재랜더링
-                render();
-              },
             },
             [title]
           );
@@ -111,18 +120,18 @@ const renderApp = () => {
 
 const root = document.getElementById("app");
 const render = () => {
-  root.replaceChildren(renderApp());
+  root.replaceChildren(App());
 };
 
 // 라우팅 맵 설정
 const routeMap = {
   "/": {
     title: "home",
-    component: renderCounterPage,
+    component: CounterPage,
   },
   "/about": {
     title: "about",
-    component: renderAboutPage,
+    component: AboutPage,
   },
 };
 
