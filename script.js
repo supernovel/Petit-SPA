@@ -31,6 +31,26 @@ const bindLinkAction = () => {
   });
 }
 
+const createEl = (tag, attrs, ...children) => {
+  const el = document.createElement(tag);
+
+  for(const attr of attrs) {
+    el.setAttribute(key, attrs[key]);
+  }
+
+  if (children) {
+    for(const child of children) {
+      if(el instanceof Node) {
+        el.appendChild(child);
+      } else {
+        el.appenChild(document.createTextNode(child));
+      }
+    }
+  }
+  
+  return el;  
+}
+
 // 뷰 정의
 const root = document.getElementById('app');
 
