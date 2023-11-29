@@ -42,22 +42,27 @@ const replaceContent = (htmlString) => {
   contentView.innerHTML = htmlString;
 };
 
-const renderCounterPage = () => {
-  let count = 0;
+let count = 0;
 
+const renderCounterPage = () => {
   const increaseCount = () => {
     count++;
-    counter.textContent = count;
+
+    // 전체 화면 재랜더링
+    render();
   };
   const decreaseCount = () => {
     count--;
-    counter.textContent = count;
+
+    // 전체 화면 재랜더링
+    render();
   };
 
-  const counter = createEl("span", { class: "counterNumber" }, ["0"]);
-
   return createEl("div", { class: "counter card" }, [
-    createEl("h1", { class: "counterTitle" }, [`Counter `, counter]),
+    createEl("h1", { class: "counterTitle" }, [
+      `Counter `,
+      createEl("span", { class: "counterNumber" }, [count]),
+    ]),
     createEl("div", { class: "counterActions" }, [
       createEl("button", { class: "increase", onClick: increaseCount }, [
         "Increase",
@@ -76,15 +81,9 @@ const renderAboutPage = () => {
   ]);
 };
 
-const renderByLink = (href) => {
-  const path = getPathnameFromHref(href);
-
-  const contentView = document.querySelector("main.content");
-
-  contentView.replaceChildren(routeMap[path].component());
-};
-
 const renderApp = () => {
+  const currentPath = window.location.pathname;
+
   return createEl(
     "div",
     { style: "height: 100%; width: 100%; display: flex; flex-flow: column;" },
@@ -94,6 +93,7 @@ const renderApp = () => {
           return createEl(
             "a",
             {
+              class: path === currentPath ? "active" : null,
               href: path,
               onClick: (event) => {
                 event.preventDefault();
@@ -101,31 +101,23 @@ const renderApp = () => {
 
                 window.history.pushState({}, "", new URL(href));
 
-                renderByLink(href);
-                updateActiveStateNav();
+                // 전체 화면 재랜더링
+                render();
               },
             },
             [title]
           );
         }),
       ]),
-      createEl("main", { class: "content" }),
+      createEl("main", { class: "content" }, [
+        routeMap[currentPath].component(),
+      ]),
     ]
   );
 };
 
-// 네비게이션 활성 상태 컨트롤
-const updateActiveStateNav = () => {
-  const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll("nav a");
-
-  navLinks.forEach((link) => {
-    if (getPathnameFromHref(link.href) === currentPath) {
-      link.classList.add("active");
-    } else {
-      link.classList.remove("active");
-    }
-  });
+const render = () => {
+  root.replaceChildren(renderApp());
 };
 
 // 라우팅 맵 설정
@@ -141,6 +133,4 @@ const routeMap = {
 };
 
 // 초기 화면 렌더링
-root.replaceChildren(renderApp());
-renderByLink(window.location.href);
-updateActiveStateNav();
+render();
