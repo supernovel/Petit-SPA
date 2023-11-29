@@ -1,16 +1,24 @@
 // 유틸리티 정의
 const getPathnameFromHref = (href) => new URL(href).pathname;
 
-const createEl = (tag, attrs, ...children) => {
+/**
+ * Creates an HTML element with the specified tag, attributes, and children.
+ *
+ * @param {string} tag - The tag name of the element to create.
+ * @param {Array} attrs - An array of attribute values to set on the element.
+ * @param {Array?} children - An array of child elements or text nodes to append to the element.
+ * @return {HTMLElement} The newly created HTML element.
+ */
+const createEl = (tag, attrs, children) => {
   const el = document.createElement(tag);
 
-  for (const attr of attrs) {
+  for (const [key, attr] of Object.entries(attrs)) {
     el.setAttribute(key, attr);
   }
 
   if (children) {
     for (const child of children) {
-      if (el instanceof Node) {
+      if (child instanceof Node) {
         el.appendChild(child);
       } else {
         el.appendChild(document.createTextNode(child));
@@ -29,12 +37,16 @@ const replaceContent = (htmlString) => {
   contentView.innerHTML = htmlString;
 };
 
-const bindCounterState = () => {
+const renderCounterPage = () => {
   let count = 0;
 
-  const counter = document.querySelector(".counterNumber");
-  const increaseButton = document.querySelector("button.increase");
-  const decreaseButton = document.querySelector("button.decrease");
+  const counter = createEl("span", { class: "counterNumber" }, ["0"]);
+  const increaseButton = createEl("button", { class: "increase" }, [
+    "Increase",
+  ]);
+  const decreaseButton = createEl("button", { class: "decrease" }, [
+    "Decrease",
+  ]);
 
   increaseButton.addEventListener("click", () => {
     count++;
@@ -45,69 +57,52 @@ const bindCounterState = () => {
     count--;
     counter.textContent = count;
   });
-};
 
-const renderCounterPage = () => {
-  const htmlString = `
-<div class="counter card">
-  <h1 class="counterTitle">Counter <span class="counterNumber">0</span> </h1>
-  <div class="counterActions">
-    <button class="increase">Increase</button>
-    <button class="decrease">Decrease</button>
-  </div>
-</div>
-  `;
-
-  replaceContent(htmlString);
-  bindCounterState();
+  return createEl("div", { class: "counter card" }, [
+    createEl("h1", { class: "counterTitle" }, [`Counter `, counter]),
+    createEl("div", { class: "counterActions" }, [
+      increaseButton,
+      decreaseButton,
+    ]),
+  ]);
 };
 
 const renderAboutPage = () => {
-  const htmlString = `
-<div class="about card">
-  <h1 class="aboutTitle">About</h1>
-  <p class="aboutContent">
-    This is simple ui library
-  </p>
-</div>
-  `;
-
-  replaceContent(htmlString);
-};
-
-// 라우팅 맵 설정
-const routeMap = {
-  "/": {
-    title: "home",
-    component: renderCounterPage,
-  },
-  "/about": {
-    title: "about",
-    component: renderAboutPage,
-  },
+  return createEl("div", { class: "about card" }, [
+    createEl("h1", { class: "aboutTitle" }, "About"),
+    createEl("p", { class: "aboutContent" }, "This is simple ui library"),
+  ]);
 };
 
 const renderByLink = (href) => {
   const path = getPathnameFromHref(href);
 
-  routeMap[path].component();
+  const contentView = document.querySelector("main.content");
+
+  contentView.replaceChildren(routeMap[path].component());
 };
 
 const renderApp = () => {
-  const htmlString = `
-<nav class="navBar">
-  ${Object.entries(routeMap).map(
-    ([path, { title }]) => `
-    <a href="${path}">${title}</a>`
-  )}
-</nav>
-<main class="content"></main>
-`;
-  root.innerHTML = htmlString;
-  bindLinkAction();
+  return createEl("div", { style: "height: 100%; width: 100%; display: flex; flex-flow: column;"}, [
+    createEl("nav", { class: "navBar" }, [
+      ...Object.entries(routeMap).map(([path, { title }]) => {
+        const link = createEl("a", { href: path }, [title]);
 
-  renderByLink(window.location.href);
-  updateActiveStateNav();
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          const href = event.target.href;
+
+          window.history.pushState({}, "", new URL(href));
+
+          renderByLink(href);
+          updateActiveStateNav();
+        });
+
+        return link;
+      }),
+    ]),
+    createEl("main", { class: "content" }),
+  ]);
 };
 
 // 네비게이션 활성 상태 컨트롤
@@ -124,22 +119,19 @@ const updateActiveStateNav = () => {
   });
 };
 
-// 네비게이션 링크 동작 연결
-const bindLinkAction = () => {
-  const navLinks = document.querySelectorAll("nav a");
-
-  navLinks.forEach((link) => {
-    link.addEventListener("click", (event) => {
-      event.preventDefault();
-      const href = event.target.href;
-
-      window.history.pushState({}, "", new URL(href));
-
-      renderByLink(href);
-      updateActiveStateNav();
-    });
-  });
+// 라우팅 맵 설정
+const routeMap = {
+  "/": {
+    title: "home",
+    component: renderCounterPage,
+  },
+  "/about": {
+    title: "about",
+    component: renderAboutPage,
+  },
 };
 
 // 초기 화면 렌더링
-renderApp();
+root.replaceChildren(renderApp());
+renderByLink(window.location.href);
+updateActiveStateNav();

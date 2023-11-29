@@ -12,6 +12,9 @@ body {
 }
 
 .navBar {
+  display: flex;
+  column-gap: 4px;
+  
   flex: 0 0 50px;
 }
 
