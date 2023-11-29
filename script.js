@@ -1,3 +1,4 @@
+// 네비게이션 활성 상태 컨트롤
 const removeOriginFromHref = (href) => href.replace(window.location.origin, "");
 
 const updateActiveStateNav = () => {
@@ -11,6 +12,46 @@ const updateActiveStateNav = () => {
       link.classList.remove('active');
     }
   });
+}
+
+// 네비게이션 링크 동작 연결
+const bindLinkAction = () => {
+  const navLinks = document.querySelectorAll('nav a');
+
+  navLinks.forEach((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const href = event.target.href;
+
+      window.history.pushState({}, "", new URL(href));
+
+      renderByLink(href);
+      updateActiveStateNav();
+    });
+  });
+}
+
+// 뷰 정의
+const root = document.getElementById('app');
+
+const renderApp = () => {
+  const htmlString = `
+<nav class="navBar">
+  <a href="index.html">home</a>
+  <a href="about.html">about</a>
+</nav>
+<main class="content"></main>
+`
+  root.innerHTML = htmlString;
+  bindLinkAction();
+  
+  renderByLink(window.location.href);
+  updateActiveStateNav();
+}
+
+const replaceContent = (htmlString) => {
+  const contentView = document.querySelector('.content');
+  contentView.innerHTML = htmlString;
 }
 
 const bindCounterState = () => {
@@ -31,13 +72,8 @@ const bindCounterState = () => {
   });
 }
 
-const updateContent = (htmlString) => {
-  const content = document.querySelector('.content');
-  content.innerHTML = htmlString;
-}
-
 const renderCounterPage = () => {
-  const content = `
+  const htmlString = `
 <div class="counter card">
   <h1 class="counterTitle">Counter <span class="counterNumber">0</span> </h1>
   <div class="counterActions">
@@ -47,11 +83,12 @@ const renderCounterPage = () => {
 </div>
   `;
 
-  updateContent(content);
+  replaceContent(htmlString);
+  bindCounterState();
 }
 
 const renderAboutPage = () => {
-  const content = `
+  const htmlString = `
 <div class="about card">
   <h1 class="aboutTitle">Abount</h1>
   <p class="aboutContent">
@@ -60,10 +97,10 @@ const renderAboutPage = () => {
 </div>
   `;
 
-  updateContent(content);
+  replaceContent(htmlString);
 }
 
-const handleLink = (href) => {
+const renderByLink = (href) => {
   const path = removeOriginFromHref(href);
 
   if (path === '/index.html') {
@@ -73,21 +110,5 @@ const handleLink = (href) => {
   }
 }
 
-const bindLinkAction = () => {
-  const navLinks = document.querySelectorAll('nav a');
-
-  navLinks.forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      const href = event.target.href;
-
-      handleLink(href);
-      window.history.pushState({}, "", new URL(href));
-      updateActiveStateNav();
-    });
-  });
-}
-
-updateActiveStateNav();
-bindCounterState();
-bindLinkAction();
+// 초기 화면 렌더링
+renderApp();
