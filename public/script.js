@@ -1,96 +1,51 @@
-// 네비게이션 활성 상태 컨트롤
-const removeOriginFromHref = (href) => href.replace(window.location.origin, "");
-
-const updateActiveStateNav = () => {
-  const currentPath = window.location.pathname;
-  const navLinks = document.querySelectorAll('nav a');
-
-  navLinks.forEach((link) => {
-    if (removeOriginFromHref(link.href) === currentPath) {
-      link.classList.add('active');
-    } else {
-      link.classList.remove('active');
-    }
-  });
-}
-
-// 네비게이션 링크 동작 연결
-const bindLinkAction = () => {
-  const navLinks = document.querySelectorAll('nav a');
-
-  navLinks.forEach((link) => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault();
-      const href = event.target.href;
-
-      window.history.pushState({}, "", new URL(href));
-
-      renderByLink(href);
-      updateActiveStateNav();
-    });
-  });
-}
+// 유틸리티 정의
+const getPathnameFromHref = (href) => new URL(href).pathname;
 
 const createEl = (tag, attrs, ...children) => {
   const el = document.createElement(tag);
 
-  for(const attr of attrs) {
-    el.setAttribute(key, attrs[key]);
+  for (const attr of attrs) {
+    el.setAttribute(key, attr);
   }
 
   if (children) {
-    for(const child of children) {
-      if(el instanceof Node) {
+    for (const child of children) {
+      if (el instanceof Node) {
         el.appendChild(child);
       } else {
-        el.appenChild(document.createTextNode(child));
+        el.appendChild(document.createTextNode(child));
       }
     }
   }
-  
-  return el;  
-}
+
+  return el;
+};
 
 // 뷰 정의
-const root = document.getElementById('app');
-
-const renderApp = () => {
-  const htmlString = `
-<nav class="navBar">
-  <a href="index.html">home</a>
-  <a href="about.html">about</a>
-</nav>
-<main class="content"></main>
-`
-  root.innerHTML = htmlString;
-  bindLinkAction();
-  
-  renderByLink(window.location.href);
-  updateActiveStateNav();
-}
+const root = document.getElementById("app");
 
 const replaceContent = (htmlString) => {
-  const contentView = document.querySelector('.content');
+  const contentView = document.querySelector(".content");
   contentView.innerHTML = htmlString;
-}
+};
 
 const bindCounterState = () => {
   let count = 0;
 
-  const counter = document.querySelector('.counterNumber');
-  const increaseButton = document.querySelector('button.increase');
-  const decreaseButton = document.querySelector('button.decrease');
+  const counter = document.querySelector(".counterNumber");
+  const increaseButton = document.querySelector("button.increase");
+  const decreaseButton = document.querySelector("button.decrease");
 
-  increaseButton.addEventListener('click', () => {
+  increaseButton.addEventListener("click", () => {
     count++;
     counter.textContent = count;
   });
 
-  decreaseButton.addEventListener('click', () => {
+  decreaseButton.addEventListener("click", () => {
     count--;
     counter.textContent = count;
   });
-}
+};
 
 const renderCounterPage = () => {
   const htmlString = `
@@ -105,12 +60,12 @@ const renderCounterPage = () => {
 
   replaceContent(htmlString);
   bindCounterState();
-}
+};
 
 const renderAboutPage = () => {
   const htmlString = `
 <div class="about card">
-  <h1 class="aboutTitle">Abount</h1>
+  <h1 class="aboutTitle">About</h1>
   <p class="aboutContent">
     This is simple ui library
   </p>
@@ -118,17 +73,73 @@ const renderAboutPage = () => {
   `;
 
   replaceContent(htmlString);
-}
+};
+
+// 라우팅 맵 설정
+const routeMap = {
+  "/": {
+    title: "home",
+    component: renderCounterPage,
+  },
+  "/about": {
+    title: "about",
+    component: renderAboutPage,
+  },
+};
 
 const renderByLink = (href) => {
-  const path = removeOriginFromHref(href);
+  const path = getPathnameFromHref(href);
 
-  if (path === '/index.html') {
-    renderCounterPage();
-  } else if (path === '/about.html') {
-    renderAboutPage()
-  }
-}
+  routeMap[path].component();
+};
+
+const renderApp = () => {
+  const htmlString = `
+<nav class="navBar">
+  ${Object.entries(routeMap).map(
+    ([path, { title }]) => `
+    <a href="${path}">${title}</a>`
+  )}
+</nav>
+<main class="content"></main>
+`;
+  root.innerHTML = htmlString;
+  bindLinkAction();
+
+  renderByLink(window.location.href);
+  updateActiveStateNav();
+};
+
+// 네비게이션 활성 상태 컨트롤
+const updateActiveStateNav = () => {
+  const currentPath = window.location.pathname;
+  const navLinks = document.querySelectorAll("nav a");
+
+  navLinks.forEach((link) => {
+    if (getPathnameFromHref(link.href) === currentPath) {
+      link.classList.add("active");
+    } else {
+      link.classList.remove("active");
+    }
+  });
+};
+
+// 네비게이션 링크 동작 연결
+const bindLinkAction = () => {
+  const navLinks = document.querySelectorAll("nav a");
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const href = event.target.href;
+
+      window.history.pushState({}, "", new URL(href));
+
+      renderByLink(href);
+      updateActiveStateNav();
+    });
+  });
+};
 
 // 초기 화면 렌더링
 renderApp();
