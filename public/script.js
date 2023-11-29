@@ -1,4 +1,5 @@
 // 유틸리티 정의
+const EVENT_NAME_REGEXP = /^on([A-Z][a-zA-Z]*)$/;
 const getPathnameFromHref = (href) => new URL(href).pathname;
 
 /**
@@ -13,7 +14,11 @@ const createEl = (tag, attrs, children) => {
   const el = document.createElement(tag);
 
   for (const [key, attr] of Object.entries(attrs)) {
-    el.setAttribute(key, attr);
+    if (key.match(EVENT_NAME_REGEXP)) {
+      el.addEventListener(key.slice(2).toLowerCase(), attr);
+    } else {
+      el.setAttribute(key, attr);
+    }
   }
 
   if (children) {
@@ -40,29 +45,26 @@ const replaceContent = (htmlString) => {
 const renderCounterPage = () => {
   let count = 0;
 
-  const counter = createEl("span", { class: "counterNumber" }, ["0"]);
-  const increaseButton = createEl("button", { class: "increase" }, [
-    "Increase",
-  ]);
-  const decreaseButton = createEl("button", { class: "decrease" }, [
-    "Decrease",
-  ]);
-
-  increaseButton.addEventListener("click", () => {
+  const increaseCount = () => {
     count++;
     counter.textContent = count;
-  });
-
-  decreaseButton.addEventListener("click", () => {
+  };
+  const decreaseCount = () => {
     count--;
     counter.textContent = count;
-  });
+  };
+
+  const counter = createEl("span", { class: "counterNumber" }, ["0"]);
 
   return createEl("div", { class: "counter card" }, [
     createEl("h1", { class: "counterTitle" }, [`Counter `, counter]),
     createEl("div", { class: "counterActions" }, [
-      increaseButton,
-      decreaseButton,
+      createEl("button", { class: "increase", onClick: increaseCount }, [
+        "Increase",
+      ]),
+      createEl("button", { class: "decrease", onClick: decreaseCount }, [
+        "Decrease",
+      ]),
     ]),
   ]);
 };
@@ -83,26 +85,33 @@ const renderByLink = (href) => {
 };
 
 const renderApp = () => {
-  return createEl("div", { style: "height: 100%; width: 100%; display: flex; flex-flow: column;"}, [
-    createEl("nav", { class: "navBar" }, [
-      ...Object.entries(routeMap).map(([path, { title }]) => {
-        const link = createEl("a", { href: path }, [title]);
+  return createEl(
+    "div",
+    { style: "height: 100%; width: 100%; display: flex; flex-flow: column;" },
+    [
+      createEl("nav", { class: "navBar" }, [
+        ...Object.entries(routeMap).map(([path, { title }]) => {
+          return createEl(
+            "a",
+            {
+              href: path,
+              onClick: (event) => {
+                event.preventDefault();
+                const href = event.target.href;
 
-        link.addEventListener("click", (event) => {
-          event.preventDefault();
-          const href = event.target.href;
+                window.history.pushState({}, "", new URL(href));
 
-          window.history.pushState({}, "", new URL(href));
-
-          renderByLink(href);
-          updateActiveStateNav();
-        });
-
-        return link;
-      }),
-    ]),
-    createEl("main", { class: "content" }),
-  ]);
+                renderByLink(href);
+                updateActiveStateNav();
+              },
+            },
+            [title]
+          );
+        }),
+      ]),
+      createEl("main", { class: "content" }),
+    ]
+  );
 };
 
 // 네비게이션 활성 상태 컨트롤
