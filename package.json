@@ -1,0 +1,13 @@
+{
+  "name": "petit-spa",
+  "version": "1.0.0",
+  "description": "간단한 UI 라이브러리",
+  "scripts": {
+    "dev": "npx serve -s ./public"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
