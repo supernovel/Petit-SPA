@@ -35,13 +35,6 @@ const createEl = (tag, attrs, children) => {
 };
 
 // 뷰 정의
-const root = document.getElementById("app");
-
-const replaceContent = (htmlString) => {
-  const contentView = document.querySelector(".content");
-  contentView.innerHTML = htmlString;
-};
-
 let count = 0;
 
 const renderCounterPage = () => {
@@ -116,6 +109,7 @@ const renderApp = () => {
   );
 };
 
+const root = document.getElementById("app");
 const render = () => {
   root.replaceChildren(renderApp());
 };
