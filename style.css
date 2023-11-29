@@ -1,4 +1,64 @@
-html {
+html,
+body {
   height: 100%;
   width: 100%;
+}
+
+.app {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+}
+
+.navBar {
+  flex: 0 0 50px;
+}
+
+.navBar a.active {
+  font-weight: bold;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+
+  padding: 16px 32px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.card button {
+  cursor: pointer;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+}
+
+.counterTitle {
+  margin: 0 0 16px 0;
+}
+
+.counterActions {
+  display: flex;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.counterActions button.increase {
+  background-color: blue;
+  color: white;
+}
+
+.counterActions button.decrease {
+  background-color: red;
+  color: white;
 }
