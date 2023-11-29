@@ -36,9 +36,12 @@ const createEl = (tag, attrs, children) => {
 
 // 컴포넌트 정의
 const Link = (attrs, children) => {
+  const currentPath = window.location.pathname;
+
   return createEl(
     "a",
     {
+      class: path === currentPath ? "active" : null,
       onClick: (event) => {
         event.preventDefault();
         const href = event.target.href;
@@ -104,7 +107,6 @@ const App = () => {
         ...Object.entries(routeMap).map(([path, { title }]) => {
           return Link(
             {
-              class: path === currentPath ? "active" : null,
               href: path,
             },
             [title]
