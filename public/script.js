@@ -35,13 +35,13 @@ const createEl = (tag, attrs, children) => {
 };
 
 // 컴포넌트 정의
-const Link = (attrs, children) => {
+const Link = ({ href, ...attrs }, children) => {
   const currentPath = window.location.pathname;
 
   return createEl(
     "a",
     {
-      class: path === currentPath ? "active" : null,
+      class: href === currentPath ? "active" : null,
       onClick: (event) => {
         event.preventDefault();
         const href = event.target.href;
@@ -51,6 +51,7 @@ const Link = (attrs, children) => {
         // 전체 화면 재랜더링
         render();
       },
+      href,
       ...attrs,
     },
     children
