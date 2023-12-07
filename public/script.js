@@ -1,26 +1,20 @@
 // 유틸리티 정의
 const EVENT_NAME_REGEXP = /^on([A-Z][a-zA-Z]*)$/;
 
-function CustomNode({ tag, attrs, children }) {
-  this.tag = tag;
-  this.attrs = attrs;
-  this.children = children;
-}
-
 /**
  * Creates an HTML element with the specified tag, attributes, and children.
  *
- * @param {string} tag - The tag name of the element to create.
+ * @param {string|function} tag - The tag name of the element to create.
  * @param {Array} attrs - An array of attribute values to set on the element.
  * @param {Array?} children - An array of child elements or text nodes to append to the element.
  * @return {CustomNode} The newly created HTML element.
  */
-const createNode = (tag, attrs, children) => {
-  return new CustomNode({
-    tag,
+const createNode = (type, attrs, children) => {
+  return {
+    type,
     attrs,
     children,
-  });
+  };
 };
 
 const render = (node, container) => {
@@ -38,10 +32,18 @@ const render = (node, container) => {
     return el;
   };
 
+  if (typeof node.type === "function") {
+    const child = node.type({ ...node.attrs, children: node.children });
+
+    render(child, container);
+
+    return;
+  }
+
   let element;
 
-  if (node instanceof CustomNode) {
-    element = createHtmlElement(node.tag, node.attrs);
+  if (typeof node.type === "string") {
+    element = createHtmlElement(node.type, node.attrs);
 
     for (const childNode of node.children) {
       render(childNode, element);
@@ -97,7 +99,7 @@ const useEffect = (callback, dependencies) => {
 };
 
 // 컴포넌트 정의
-const Link = ({ href, ...attrs }, children) => {
+const Link = ({ href, children, ...attrs }) => {
   const currentPath = window.location.pathname;
 
   return createNode(
@@ -119,7 +121,7 @@ const Link = ({ href, ...attrs }, children) => {
   );
 };
 
-const CounterPage = (children) => {
+const CounterPage = ({ children }) => {
   const [count1, setCount1] = useState(0);
   const [count2, setCount2] = useState(0);
   const increaseCount = () => {
@@ -152,7 +154,9 @@ const AboutPage = () => {
   return createNode("div", { class: "about card" }, [
     createNode("h1", { class: "aboutTitle" }, "About"),
     createNode("p", { class: "aboutContent" }, "This is simple ui library"),
-    CounterPage([CounterPage([CounterPage()])]),
+    createNode(CounterPage, {}, [
+      createNode(CounterPage, {}, [createNode(CounterPage, {}, [])]),
+    ]),
   ]);
 };
 
@@ -169,7 +173,8 @@ const App = () => {
     [
       createNode("nav", { class: "navBar" }, [
         ...Object.entries(routeMap).map(([path, { title }]) => {
-          return Link(
+          return createNode(
+            Link,
             {
               href: path,
               onClick: () => {
@@ -181,7 +186,7 @@ const App = () => {
         }),
       ]),
       createNode("main", { class: "content" }, [
-        routeMap[currentPath].component(),
+        createNode(routeMap[currentPath].component, {}, []),
       ]),
     ]
   );
@@ -204,9 +209,8 @@ const root = document.getElementById("app");
 // 초기 화면 렌더링
 const renderApp = () => {
   currentHookIndex = 0;
-
-  root.innerHTML = ''
-  render(App(), root);
+  root.innerHTML = "";
+  render(createNode(App, {}, []), root);
 };
 
 renderApp();
