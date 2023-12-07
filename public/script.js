@@ -49,7 +49,7 @@ const render = (node, container) => {
 
       const child = node.type({ ...node.attrs, children: node.children });
       const element = render(child, container);
-      
+
       node._element.replaceWith(element);
       node._element = element;
     };
@@ -122,7 +122,7 @@ const useEffect = (callback, dependencies) => {
 };
 
 // 컴포넌트 정의
-const Link = ({ href, children, ...attrs }) => {
+const Link = ({ href, children, onClick, ...attrs }) => {
   const currentPath = window.location.pathname;
 
   return createNode(
@@ -135,10 +135,10 @@ const Link = ({ href, children, ...attrs }) => {
 
         window.history.pushState({}, "", new URL(href));
 
-        attrs.onClick && attrs.onClick(event);
+        onClick && onClick(event);
       },
       href,
-      ...attrs,
+      ...attrs
     },
     children
   );
