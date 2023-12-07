@@ -9,8 +9,10 @@ const EVENT_NAME_REGEXP = /^on([A-Z][a-zA-Z]*)$/;
  * @param {Array?} children - An array of child elements or text nodes to append to the element.
  * @return {CustomNode} The newly created HTML element.
  */
+let nodeId = 0;
 const createNode = (type, attrs, children) => {
   return {
+    key: nodeId++,
     type,
     attrs,
     children,
@@ -33,9 +35,24 @@ const render = (node, container) => {
   };
 
   if (typeof node.type === "function") {
+    currentHookNode = node;
+    node.currentHookIndex = 0;
+
     const child = node.type({ ...node.attrs, children: node.children });
 
-    render(child, container);
+    const element = render(child, container);
+    node._element = element;
+
+    node.render = () => {
+      currentHookNode = node;
+      node.currentHookIndex = 0;
+
+      const child = node.type({ ...node.attrs, children: node.children });
+      const element = render(child, container);
+      
+      node._element.replaceWith(element);
+      node._element = element;
+    };
 
     return;
   }
@@ -53,31 +70,37 @@ const render = (node, container) => {
   }
 
   container.appendChild(element);
+
+  return element;
 };
 
 // 훅 정의
-const hooks = [];
-let currentHookIndex = 0;
+const hookMap = {};
+let currentHookNode = null;
 
 const useState = (initialValue) => {
-  const hookIndex = currentHookIndex;
+  const node = currentHookNode;
+  const hooks = hookMap[node.key] || (hookMap[node.key] = []);
+  const hookIndex = node.currentHookIndex;
   const value = hooks[hookIndex] || initialValue;
 
   hooks[hookIndex] = value;
 
-  currentHookIndex++;
+  node.currentHookIndex++;
 
   return [
     value,
     (newValue) => {
       hooks[hookIndex] = newValue;
-      renderApp();
+      node.render();
     },
   ];
 };
 
 const useEffect = (callback, dependencies) => {
-  const hookIndex = currentHookIndex;
+  const node = currentHookNode;
+  const hooks = hookMap[node.key] || (hookMap[node.key] = []);
+  const hookIndex = node.currentHookIndex;
   const prevDependencies = hooks[hookIndex] ?? [];
   let hasChanged = false;
 
@@ -93,9 +116,9 @@ const useEffect = (callback, dependencies) => {
     callback();
   }
 
-  hooks[currentHookIndex] = dependencies;
+  hooks[hookIndex] = dependencies;
 
-  currentHookIndex++;
+  node.currentHookIndex++;
 };
 
 // 컴포넌트 정의
@@ -208,7 +231,6 @@ const root = document.getElementById("app");
 
 // 초기 화면 렌더링
 const renderApp = () => {
-  currentHookIndex = 0;
   root.innerHTML = "";
   render(createNode(App, {}, []), root);
 };
